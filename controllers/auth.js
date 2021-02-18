@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const express = require('express');
 const db = require('../models')
 const router = express.Router();
+const { createUserToken } = require('../middleware/auth');
 
 // URL prefix - /api
 
@@ -13,16 +14,33 @@ router.post('/signup', (req, res) => {
             email: req.body.email,
             password: hash
         }))
-        .then(createdUser => res.json(createdUser))
+        .then(createdUser => res.json({
+            token: createUserToken(req, createdUser),
+            user: createdUser
+        }))
         .catch(err => {
             console.log(`🔥 Error in the POST signup:`, err);
-            res.json({ error: err });
+            res.json({ error: err.message });
         });
 });
 
 // Login - POST /api/login
 router.post('/login', (req, res) => {
-    res.json({ message: 'LOGIN POST' });
+    // if login  details are correct
+    db.User.findOne({ email: req.body.email })
+        .then(user => {
+            // create and send a token via createUserToken
+            res.json({
+                token: createUserToken(req, user),
+                user: user
+            });
+        }).catch(err => {
+            //send an error
+            console.log(`🔥 Error in the POST login route`)
+            res.json({
+                error: err.message
+            })
+        })
 });
 
 module.exports = router;
