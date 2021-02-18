@@ -9,6 +9,8 @@ mongoose.connect(process.env.MONGODB_URI, {
     useCreateIndex: true
 });
 
+mongoose.set('returnOriginal', false);
+
 // Console.log on open
 mongoose.connection.once('open', () => {
     console.log(`🔗 Connected to db: ${mongoose.connection.name} at ${mongoose.connection.host}:${mongoose.connection.port}`);

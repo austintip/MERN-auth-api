@@ -67,9 +67,11 @@ router.put(
         console.log(decoded)
         // decode the token to get those sweet payload deets
         // update a uer based on the id form token and update info from body
-
-    })
-
+        db.User.findByIdAndUpdate(decoded.id, { name: req.body.name })
+        .then(user => {
+            res.status(201).json(user);
+        });
+    });
 
 
 module.exports = router;
