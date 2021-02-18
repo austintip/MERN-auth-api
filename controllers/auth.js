@@ -3,6 +3,8 @@ const express = require('express');
 const db = require('../models')
 const router = express.Router();
 const { createUserToken } = require('../middleware/auth');
+const passport = require('passport');
+const jwt = require('jsonwebtoken')
 
 // URL prefix - /api
 
@@ -14,13 +16,13 @@ router.post('/signup', (req, res) => {
             email: req.body.email,
             password: hash
         }))
-        .then(createdUser => res.json({
+        .then(createdUser => res.status(201).json({
             token: createUserToken(req, createdUser),
             user: createdUser
         }))
         .catch(err => {
             console.log(`🔥 Error in the POST signup:`, err);
-            res.json({ error: err.message });
+            res.status(401).json({ error: err.message });
         });
 });
 
@@ -30,17 +32,44 @@ router.post('/login', (req, res) => {
     db.User.findOne({ email: req.body.email })
         .then(user => {
             // create and send a token via createUserToken
-            res.json({
+            res.status(201).json({
                 token: createUserToken(req, user),
                 user: user
             });
         }).catch(err => {
             //send an error
             console.log(`🔥 Error in the POST login route`)
-            res.json({
+            res.status(401).json({
                 error: err.message
             })
         })
 });
+
+// GET  /api/private - Test route
+router.get(
+    '/private',
+    passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+        res.status(200).json({
+            message: 'Thou hast been granted permission to access this message'
+        })
+    }
+)
+
+//PUT - /api/user
+router.put(
+    '/user',
+    passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+        // get the token from the req headers
+        let token = req.headers.authorization.split(' ')[1]
+        let decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log(decoded)
+        // decode the token to get those sweet payload deets
+        // update a uer based on the id form token and update info from body
+
+    })
+
+
 
 module.exports = router;
